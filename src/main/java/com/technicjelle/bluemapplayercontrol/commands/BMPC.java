@@ -1,5 +1,6 @@
 package com.technicjelle.bluemapplayercontrol.commands;
 
+import com.technicjelle.bluemapplayercontrol.DatabaseManager;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -18,7 +19,10 @@ import java.util.UUID;
 @SuppressWarnings("UnstableApiUsage")
 public class BMPC implements CommandExecutor, TabCompleter {
 
-	public BMPC() {
+	private final DatabaseManager databaseManager;
+
+	public BMPC(DatabaseManager databaseManager) {
+		this.databaseManager = databaseManager;
 	}
 
 	@Override
@@ -59,7 +63,6 @@ public class BMPC implements CommandExecutor, TabCompleter {
 				}
 			}
 
-
 			// === OTHER ===
 			if (!othersAllowed(sender)) {
 				sender.sendMessage(ChatColor.RED + "Вы не можете менять видимость других игроков");
@@ -92,23 +95,27 @@ public class BMPC implements CommandExecutor, TabCompleter {
 		return false;
 	}
 
-	private static void showSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
+	private void showSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
 		blueMapAPI.getWebApp().setPlayerVisibility(senderUUID, true);
+		databaseManager.setVisibility(senderUUID, true);
 		sender.sendMessage("Теперь вы " + ChatColor.AQUA + "видимы" + ChatColor.RESET + " на карте");
 	}
 
-	private static void hideSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
+	private void hideSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
 		blueMapAPI.getWebApp().setPlayerVisibility(senderUUID, false);
+		databaseManager.setVisibility(senderUUID, false);
 		sender.sendMessage("Теперь вы " + ChatColor.GOLD + "невидимы" + ChatColor.RESET + " на карте");
 	}
 
-	private static void showOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
+	private void showOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
 		api.getWebApp().setPlayerVisibility(targetPlayer.getUniqueId(), true);
+		databaseManager.setVisibility(targetPlayer.getUniqueId(), true);
 		sender.sendMessage(targetPlayer.getDisplayName() + " теперь " + ChatColor.AQUA + "видим" + ChatColor.RESET + " на карте");
 	}
 
-	private static void hideOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
+	private void hideOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
 		api.getWebApp().setPlayerVisibility(targetPlayer.getUniqueId(), false);
+		databaseManager.setVisibility(targetPlayer.getUniqueId(), false);
 		sender.sendMessage(targetPlayer.getDisplayName() + " теперь " + ChatColor.GOLD + "невидим" + ChatColor.RESET + " на карте");
 	}
 
