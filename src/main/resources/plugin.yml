@@ -22,11 +22,11 @@ permissions:
     default: op
     children:
       bmpc.self:
-        default: true
+        default: false
         children:
-          bmpc.self.toggle: true
-          bmpc.self.show: true
-          bmpc.self.hide: true
+          bmpc.self.toggle: false
+          bmpc.self.show: false
+          bmpc.self.hide: false
       bmpc.others:
         default: op
         children:
@@ -34,11 +34,11 @@ permissions:
           bmpc.others.show: true
           bmpc.others.hide: true
   bmpc.self.toggle:
-    default: true
+    default: false
   bmpc.self.show:
-    default: true
+    default: false
   bmpc.self.hide:
-    default: true
+    default: false
   bmpc.others.toggle:
     default: op
   bmpc.others.show:

@@ -27,41 +27,47 @@ public class BMPC implements CommandExecutor, TabCompleter {
 			BlueMapAPI api = BlueMapAPI.getInstance().get();
 
 			// === SELF ===
-			if (sender instanceof Player player) { // only players can self
-				UUID senderUUID = player.getUniqueId();
-				if (args.length == 0) {
-					//toggle
-					if (api.getWebApp().getPlayerVisibility(senderUUID)) {
-						hideSelf(api, sender, senderUUID);
-					} else {
-						showSelf(api, sender, senderUUID);
-					}
-					return true;
-				}
-				if (args.length == 1) {
-					if (args[0].equalsIgnoreCase("show")) {
-						showSelf(api, sender, senderUUID);
-						return true;
-					} else if (args[0].equalsIgnoreCase("hide")) {
-						hideSelf(api, sender, senderUUID);
-						return true;
-					}
-				}
+			if (!selfAllowed(sender)) {
+				sender.sendMessage(ChatColor.RED + "Вы не можете менять видимость");
+				return true;
 			} else {
-				if (args.length == 0) {
-					sender.sendMessage(ChatColor.RED + "You must be a player to hide yourself");
-					return true;
+				if (sender instanceof Player player) { // only players can self
+					UUID senderUUID = player.getUniqueId();
+					if (args.length == 0) {
+						//toggle
+						if (api.getWebApp().getPlayerVisibility(senderUUID)) {
+							hideSelf(api, sender, senderUUID);
+						} else {
+							showSelf(api, sender, senderUUID);
+						}
+						return true;
+					}
+					if (args.length == 1) {
+						if (args[0].equalsIgnoreCase("show")) {
+							showSelf(api, sender, senderUUID);
+							return true;
+						} else if (args[0].equalsIgnoreCase("hide")) {
+							hideSelf(api, sender, senderUUID);
+							return true;
+						}
+					}
+				} else {
+					if (args.length == 0) {
+						sender.sendMessage(ChatColor.RED + "Только игрок может скрыть себя");
+						return true;
+					}
 				}
 			}
 
+
 			// === OTHER ===
 			if (!othersAllowed(sender)) {
-				sender.sendMessage(ChatColor.RED + "You are don't have permission to change the visibility of others");
+				sender.sendMessage(ChatColor.RED + "Вы не можете менять видимость других игроков");
 			} else {
 				String targetName = args[args.length - 1];
 				List<Entity> targets = Bukkit.selectEntities(sender, targetName);
 				if (targets.isEmpty()) {
-					sender.sendMessage(ChatColor.YELLOW + "Player \"" + targetName + "\" not found");
+					sender.sendMessage(ChatColor.YELLOW + "Игрок \"" + targetName + "\" не найден");
 					return true;
 				}
 				for (Entity target : targets) {
@@ -88,22 +94,22 @@ public class BMPC implements CommandExecutor, TabCompleter {
 
 	private static void showSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
 		blueMapAPI.getWebApp().setPlayerVisibility(senderUUID, true);
-		sender.sendMessage("You are now " + ChatColor.AQUA + "visible" + ChatColor.RESET + " on the map");
+		sender.sendMessage("Теперь вы " + ChatColor.AQUA + "видимы" + ChatColor.RESET + " на карте");
 	}
 
 	private static void hideSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
 		blueMapAPI.getWebApp().setPlayerVisibility(senderUUID, false);
-		sender.sendMessage("You are now " + ChatColor.GOLD + "invisible" + ChatColor.RESET + " on the map");
+		sender.sendMessage("Теперь вы " + ChatColor.GOLD + "невидимы" + ChatColor.RESET + " на карте");
 	}
 
 	private static void showOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
 		api.getWebApp().setPlayerVisibility(targetPlayer.getUniqueId(), true);
-		sender.sendMessage(targetPlayer.getDisplayName() + " is now " + ChatColor.AQUA + "visible" + ChatColor.RESET + " on the map");
+		sender.sendMessage(targetPlayer.getDisplayName() + " теперь " + ChatColor.AQUA + "видим" + ChatColor.RESET + " на карте");
 	}
 
 	private static void hideOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
 		api.getWebApp().setPlayerVisibility(targetPlayer.getUniqueId(), false);
-		sender.sendMessage(targetPlayer.getDisplayName() + " is now " + ChatColor.GOLD + "invisible" + ChatColor.RESET + " on the map");
+		sender.sendMessage(targetPlayer.getDisplayName() + " теперь " + ChatColor.GOLD + "невидим" + ChatColor.RESET + " на карте");
 	}
 
 	@Override
@@ -139,5 +145,8 @@ public class BMPC implements CommandExecutor, TabCompleter {
 
 	private boolean othersAllowed(CommandSender sender) {
 		return sender.isOp() || sender.hasPermission("bmpc.others");
+	}
+	private boolean selfAllowed(CommandSender sender) {
+		return sender.isOp() || sender.hasPermission("bmpc.self");
 	}
 }
