@@ -34,10 +34,6 @@
 				<configuration>
 					<relocations>
 						<relocation>
-							<pattern>com.technicjelle.UpdateChecker</pattern>
-							<shadedPattern>com.technicjelle.bluemapplayercontrol.shadow.UpdateChecker</shadedPattern>
-						</relocation>
-						<relocation>
 							<pattern>org.bstats</pattern>
 							<shadedPattern>com.technicjelle.bluemapplayercontrol.shadow.bstats</shadedPattern>
 						</relocation>
@@ -81,12 +77,7 @@
 	</repositories>
 
 	<dependencies>
-		<dependency>
-			<groupId>com.technicjelle</groupId>
-			<artifactId>UpdateChecker</artifactId>
-			<version>2.5.1</version>
-			<scope>compile</scope>
-		</dependency>
+
 		<dependency>
 			<groupId>com.destroystokyo.paper</groupId>
 			<artifactId>paper-api</artifactId>
