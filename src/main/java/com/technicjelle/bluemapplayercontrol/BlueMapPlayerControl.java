@@ -25,7 +25,7 @@ public final class BlueMapPlayerControl extends JavaPlugin implements Listener {
 
         new Metrics(this, 18378);
 
-        PluginCommand bmpc = Bukkit.getPluginCommand("bmpc");
+        PluginCommand bmpc = Bukkit.getPluginCommand("map");
         executor = new BMPC(databaseManager); // Передаем БД в команду
         if (bmpc != null) {
             bmpc.setExecutor(executor);

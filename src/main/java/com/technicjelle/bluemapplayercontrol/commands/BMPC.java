@@ -31,37 +31,38 @@ public class BMPC implements CommandExecutor, TabCompleter {
 			BlueMapAPI api = BlueMapAPI.getInstance().get();
 
 			// === SELF ===
-			if (!selfAllowed(sender)) {
-				sender.sendMessage(ChatColor.RED + "Вы не можете менять видимость");
-				return true;
-			} else {
-				if (sender instanceof Player player) { // only players can self
-					UUID senderUUID = player.getUniqueId();
-					if (args.length == 0) {
-						//toggle
-						if (api.getWebApp().getPlayerVisibility(senderUUID)) {
-							hideSelf(api, sender, senderUUID);
-						} else {
-							showSelf(api, sender, senderUUID);
-						}
-						return true;
-					}
-					if (args.length == 1) {
+			if (sender instanceof Player player) { // only players can self
+				UUID senderUUID = player.getUniqueId();
+				if (args.length == 0) {
+					sender.sendMessage("Сссылка на карту");
+					return true;
+				}
+				if (args.length == 1) {
+					if (selfAllowed(sender)) {
 						if (args[0].equalsIgnoreCase("show")) {
 							showSelf(api, sender, senderUUID);
-							return true;
 						} else if (args[0].equalsIgnoreCase("hide")) {
 							hideSelf(api, sender, senderUUID);
-							return true;
+						} else if (args[0].equalsIgnoreCase("toggle")) {
+							if (api.getWebApp().getPlayerVisibility(senderUUID)) {
+								hideSelf(api, sender, senderUUID);
+							} else {
+								showSelf(api, sender, senderUUID);
+							}
+
 						}
+					} else {
+						sender.sendMessage(ChatColor.RED + "Вы не можете менять видимость");
 					}
-				} else {
-					if (args.length == 0) {
-						sender.sendMessage(ChatColor.RED + "Только игрок может скрыть себя");
-						return true;
-					}
+					return true;
+				}
+			} else {
+				if (args.length == 0) {
+					sender.sendMessage(ChatColor.RED + "Только игрок может скрыть себя");
+					return true;
 				}
 			}
+
 
 			// === OTHER ===
 			if (!othersAllowed(sender)) {
@@ -75,17 +76,17 @@ public class BMPC implements CommandExecutor, TabCompleter {
 				}
 				for (Entity target : targets) {
 					if (!(target instanceof Player targetPlayer)) continue;
-					if (args.length == 1) {
-						//toggle
+
+					if (args[0].equalsIgnoreCase("show")) {
+						showOther(api, sender, targetPlayer);
+					} else if (args[0].equalsIgnoreCase("hide")) {
+						hideOther(api, sender, targetPlayer);
+					} else if (args[0].equalsIgnoreCase("toggle")) {
 						if (api.getWebApp().getPlayerVisibility(targetPlayer.getUniqueId())) {
 							hideOther(api, sender, targetPlayer);
 						} else {
 							showOther(api, sender, targetPlayer);
 						}
-					} else if (args[0].equalsIgnoreCase("show")) {
-						showOther(api, sender, targetPlayer);
-					} else if (args[0].equalsIgnoreCase("hide")) {
-						hideOther(api, sender, targetPlayer);
 					}
 				}
 			}
@@ -111,40 +112,40 @@ public class BMPC implements CommandExecutor, TabCompleter {
 		api.getWebApp().setPlayerVisibility(targetPlayer.getUniqueId(), true);
 		databaseManager.setVisibility(targetPlayer.getUniqueId(), true);
 		sender.sendMessage(targetPlayer.getDisplayName() + " теперь " + ChatColor.AQUA + "видим" + ChatColor.RESET + " на карте");
+		targetPlayer.sendMessage("Теперь вы " + ChatColor.AQUA + "видимы" + ChatColor.RESET + " на карте");
 	}
 
 	private void hideOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
 		api.getWebApp().setPlayerVisibility(targetPlayer.getUniqueId(), false);
 		databaseManager.setVisibility(targetPlayer.getUniqueId(), false);
 		sender.sendMessage(targetPlayer.getDisplayName() + " теперь " + ChatColor.GOLD + "невидим" + ChatColor.RESET + " на карте");
+		targetPlayer.sendMessage("Теперь вы " + ChatColor.GOLD + "невидимы" + ChatColor.RESET + " на карте");
 	}
 
 	@Override
 	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
 		List<String> completions = new ArrayList<>();
 		if (args.length == 1) {
-			completions.add("show");
-			completions.add("hide");
-			if (othersAllowed(sender)) {
-				for (Player player : sender.getServer().getOnlinePlayers()) {
-					completions.add(player.getName());
-				}
+			if (selfAllowed(sender)) {
+				completions.add("show");
+				completions.add("hide");
+				completions.add("toggle");
 			}
-		}
-		if (othersAllowed(sender)) {
-			if (sender.getServer().getPlayer(args[0]) == null
-					|| args[0].equalsIgnoreCase("show")
-					|| args[0].equalsIgnoreCase("hide")
-					|| args[0].isBlank()) {
-				if (args.length <= 2) {
-					for (Player player : sender.getServer().getOnlinePlayers()) {
-						completions.add(player.getName());
-					}
-					completions.add("@a");
-					completions.add("@p");
-					completions.add("@r");
-					completions.add("@s");
-				}
+		} else if (args.length == 2) {
+			if (othersAllowed(sender)) {
+				if (sender.getServer().getPlayer(args[0]) == null
+						|| args[0].equalsIgnoreCase("show")
+						|| args[0].equalsIgnoreCase("hide")
+						|| args[0].equalsIgnoreCase("toggle")
+						|| args[0].isBlank()) {
+                    for (Player player : sender.getServer().getOnlinePlayers()) {
+                        completions.add(player.getName());
+                    }
+                    completions.add("@a");
+                    completions.add("@p");
+                    completions.add("@r");
+                    completions.add("@s");
+                }
 			}
 		}
 		return completions;
