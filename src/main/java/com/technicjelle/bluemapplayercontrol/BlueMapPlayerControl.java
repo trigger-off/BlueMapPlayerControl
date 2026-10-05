@@ -1,5 +1,6 @@
 package com.technicjelle.bluemapplayercontrol;
 
+import com.technicjelle.bluemapplayercontrol.api.BMPC_API;
 import com.technicjelle.bluemapplayercontrol.commands.BMPC;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import org.bstats.bukkit.Metrics;
@@ -44,6 +45,13 @@ public final class BlueMapPlayerControl extends JavaPlugin implements Listener {
                 api.getWebApp().setPlayerVisibility(player.getUniqueId(), isVisible);
             }
         });
+        BMPC_API apiInstance = new BMPC_API_Implementation(databaseManager);
+        getServer().getServicesManager().register(
+                BMPC_API.class,
+                apiInstance,
+                this,
+                org.bukkit.plugin.ServicePriority.Normal
+        );
     }
 
     @Override
