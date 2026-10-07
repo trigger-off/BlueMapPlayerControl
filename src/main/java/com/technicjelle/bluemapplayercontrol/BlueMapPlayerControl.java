@@ -3,7 +3,6 @@ package com.technicjelle.bluemapplayercontrol;
 import com.technicjelle.bluemapplayercontrol.api.BMPC_API;
 import com.technicjelle.bluemapplayercontrol.commands.BMPC;
 import de.bluecolored.bluemap.api.BlueMapAPI;
-import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -24,15 +23,13 @@ public final class BlueMapPlayerControl extends JavaPlugin implements Listener {
         // Инициализация БД
         databaseManager = new DatabaseManager(this);
 
-        new Metrics(this, 18378);
-
         PluginCommand bmpc = Bukkit.getPluginCommand("map");
         executor = new BMPC(databaseManager); // Передаем БД в команду
         if (bmpc != null) {
             bmpc.setExecutor(executor);
             bmpc.setTabCompleter(executor);
         } else {
-            getLogger().warning("bmpc is null. This is not good");
+            getLogger().warning("map is null. This is not good");
         }
 
         // Регистрируем слушатель для входа игроков
@@ -67,7 +64,7 @@ public final class BlueMapPlayerControl extends JavaPlugin implements Listener {
         BlueMapAPI.getInstance().ifPresent(api -> {
             // Загружаем данные асинхронно, чтобы не вызывать лагов при заходе игрока
             Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-                if (!event.getPlayer().hasPermission("bmpc.self")) {
+                if (!event.getPlayer().hasPermission("map.self")) {
                     api.getWebApp().setPlayerVisibility(event.getPlayer().getUniqueId(), true);
                     return;
                 }

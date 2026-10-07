@@ -13,34 +13,34 @@ commands:
   map:
     usage: /<command> [hide | show | toggle] [player]
     description: Online map
-    permission: bmpc
+    permission: map
 permissions:
-  bmpc:
+  map:
     default: true
-  bmpc.*:
+  map.*:
     default: op
     children:
-      bmpc.self:
+      map.self:
         default: false
         children:
-          bmpc.self.toggle: false
-          bmpc.self.show: false
-          bmpc.self.hide: false
-      bmpc.others:
+          map.self.toggle: false
+          map.self.show: false
+          map.self.hide: false
+      map.others:
         default: op
         children:
-          bmpc.others.toggle: true
-          bmpc.others.show: true
-          bmpc.others.hide: true
-  bmpc.self.toggle:
+          map.others.toggle: true
+          map.others.show: true
+          map.others.hide: true
+  map.self.toggle:
     default: false
-  bmpc.self.show:
+  map.self.show:
     default: false
-  bmpc.self.hide:
+  map.self.hide:
     default: false
-  bmpc.others.toggle:
+  map.others.toggle:
     default: op
-  bmpc.others.show:
+  map.others.show:
     default: op
-  bmpc.others.hide:
+  map.others.hide:
     default: op

@@ -10,151 +10,125 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @SuppressWarnings("UnstableApiUsage")
 public class BMPC implements CommandExecutor, TabCompleter {
+    private final DatabaseManager databaseManager;
 
-	private final DatabaseManager databaseManager;
+    public BMPC(DatabaseManager databaseManager) {
+        this.databaseManager = databaseManager;
+    }
 
-	public BMPC(DatabaseManager databaseManager) {
-		this.databaseManager = databaseManager;
-	}
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (BlueMapAPI.getInstance().isEmpty()) return false;
+        BlueMapAPI api = BlueMapAPI.getInstance().get();
 
-	@Override
-	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-		if (BlueMapAPI.getInstance().isPresent()) {
-			BlueMapAPI api = BlueMapAPI.getInstance().get();
-
-			// === SELF ===
-			if (sender instanceof Player player) { // only players can self
-				UUID senderUUID = player.getUniqueId();
-				if (args.length == 0) {
-					sender.sendMessage("Сссылка на карту");
-					return true;
-				}
-				if (args.length == 1) {
-					if (selfAllowed(sender)) {
-						if (args[0].equalsIgnoreCase("show")) {
-							showSelf(api, sender, senderUUID);
-						} else if (args[0].equalsIgnoreCase("hide")) {
-							hideSelf(api, sender, senderUUID);
-						} else if (args[0].equalsIgnoreCase("toggle")) {
-							if (api.getWebApp().getPlayerVisibility(senderUUID)) {
-								hideSelf(api, sender, senderUUID);
-							} else {
-								showSelf(api, sender, senderUUID);
-							}
-
-						}
-					} else {
-						sender.sendMessage(ChatColor.RED + "Вы не можете менять видимость");
-					}
-					return true;
-				}
-			} else {
-				if (args.length == 0) {
-					sender.sendMessage(ChatColor.RED + "Только игрок может скрыть себя");
-					return true;
-				}
-			}
-
-
-			// === OTHER ===
-			if (!othersAllowed(sender)) {
-				sender.sendMessage(ChatColor.RED + "Вы не можете менять видимость других игроков");
-			} else {
-				String targetName = args[args.length - 1];
-				List<Entity> targets = Bukkit.selectEntities(sender, targetName);
-				if (targets.isEmpty()) {
-					sender.sendMessage(ChatColor.YELLOW + "Игрок \"" + targetName + "\" не найден");
-					return true;
-				}
-				for (Entity target : targets) {
-					if (!(target instanceof Player targetPlayer)) continue;
-
-					if (args[0].equalsIgnoreCase("show")) {
-						showOther(api, sender, targetPlayer);
-					} else if (args[0].equalsIgnoreCase("hide")) {
-						hideOther(api, sender, targetPlayer);
-					} else if (args[0].equalsIgnoreCase("toggle")) {
-						if (api.getWebApp().getPlayerVisibility(targetPlayer.getUniqueId())) {
-							hideOther(api, sender, targetPlayer);
-						} else {
-							showOther(api, sender, targetPlayer);
-						}
-					}
-				}
-			}
-			return true;
-		}
-
-		return false;
-	}
-
-	private void showSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
-		blueMapAPI.getWebApp().setPlayerVisibility(senderUUID, true);
-		databaseManager.setVisibility(senderUUID, true);
-		sender.sendMessage("Теперь вы " + ChatColor.AQUA + "видимы" + ChatColor.RESET + " на карте");
-	}
-
-	private void hideSelf(BlueMapAPI blueMapAPI, CommandSender sender, UUID senderUUID) {
-		blueMapAPI.getWebApp().setPlayerVisibility(senderUUID, false);
-		databaseManager.setVisibility(senderUUID, false);
-		sender.sendMessage("Теперь вы " + ChatColor.GOLD + "невидимы" + ChatColor.RESET + " на карте");
-	}
-
-	private void showOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
-		api.getWebApp().setPlayerVisibility(targetPlayer.getUniqueId(), true);
-		databaseManager.setVisibility(targetPlayer.getUniqueId(), true);
-		sender.sendMessage(targetPlayer.getDisplayName() + " теперь " + ChatColor.AQUA + "видим" + ChatColor.RESET + " на карте");
-		targetPlayer.sendMessage("Теперь вы " + ChatColor.AQUA + "видимы" + ChatColor.RESET + " на карте");
-	}
-
-	private void hideOther(BlueMapAPI api, @NotNull CommandSender sender, Player targetPlayer) {
-		api.getWebApp().setPlayerVisibility(targetPlayer.getUniqueId(), false);
-		databaseManager.setVisibility(targetPlayer.getUniqueId(), false);
-		sender.sendMessage(targetPlayer.getDisplayName() + " теперь " + ChatColor.GOLD + "невидим" + ChatColor.RESET + " на карте");
-		targetPlayer.sendMessage("Теперь вы " + ChatColor.GOLD + "невидимы" + ChatColor.RESET + " на карте");
-	}
-
-	@Override
-	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
-		List<String> completions = new ArrayList<>();
-		if (args.length == 1) {
-			if (selfAllowed(sender)) {
-				completions.add("show");
-				completions.add("hide");
-				completions.add("toggle");
-			}
-		} else if (args.length == 2) {
-			if (othersAllowed(sender)) {
-				if (sender.getServer().getPlayer(args[0]) == null
-						|| args[0].equalsIgnoreCase("show")
-						|| args[0].equalsIgnoreCase("hide")
-						|| args[0].equalsIgnoreCase("toggle")
-						|| args[0].isBlank()) {
-                    for (Player player : sender.getServer().getOnlinePlayers()) {
-                        completions.add(player.getName());
-                    }
-                    completions.add("@a");
-                    completions.add("@p");
-                    completions.add("@r");
-                    completions.add("@s");
+        if (sender instanceof Player player) {
+            if (args.length == 0) {
+				sender.sendMessage(ChatColor.WHITE + "Карта сервера доступна по ссылке:\n(на ссылку можно нажать)\n" + ChatColor.LIGHT_PURPLE + "https://pixel-craft.ru/map");
+                return true;
+            }
+            if (args.length == 1) {
+                if (!selfAllowed(sender)) {
+                    sender.sendMessage(ChatColor.RED + "Ты не можешь менять видимость");
+                    return true;
                 }
-			}
+                handleSelf(api, sender, player, args[0]);
+                return true;
+            }
+        } else if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "Только игрок может скрыть себя");
+            return true;
+        }
+
+        if (!othersAllowed(sender)) {
+            sender.sendMessage(ChatColor.RED + "Ты не можешь менять видимость других игроков");
+            return true;
+        }
+
+        String targetName = args[args.length - 1];
+        List<Entity> targets = Bukkit.selectEntities(sender, targetName);
+        if (targets.isEmpty()) {
+            sender.sendMessage(ChatColor.RED + "Игрок \"" + targetName + "\" не найден");
+            return true;
+        }
+
+		handleOthers(sender, args, targets, api);
+		return true;
+    }
+
+	private void handleOthers(CommandSender sender, String[] args, List<Entity> targets, BlueMapAPI api) {
+		String action = args[0].toLowerCase(Locale.ROOT);
+		for (Entity target : targets) {
+			if (!(target instanceof Player targetPlayer)) continue;
+			switch (action) {
+				case "show" -> setVisibility(api, sender, targetPlayer.getUniqueId(), true, false, targetPlayer.getName());
+				case "hide" -> setVisibility(api, sender, targetPlayer.getUniqueId(), false, false, targetPlayer.getName());
+            }
 		}
-		return completions;
 	}
 
-	private boolean othersAllowed(CommandSender sender) {
-		return sender.isOp() || sender.hasPermission("bmpc.others");
-	}
-	private boolean selfAllowed(CommandSender sender) {
-		return sender.isOp() || sender.hasPermission("bmpc.self");
-	}
+	private void handleSelf(BlueMapAPI api, CommandSender sender, Player player, String action) {
+        UUID uuid = player.getUniqueId();
+        switch (action.toLowerCase(Locale.ROOT)) {
+            case "show" -> setVisibility(api, sender, uuid, true, true, player.getName());
+            case "hide" -> setVisibility(api, sender, uuid, false, true, player.getName());
+        }
+    }
+
+    private void setVisibility(BlueMapAPI api, CommandSender sender, UUID targetUUID, boolean visible, boolean self, String targetName) {
+        api.getWebApp().setPlayerVisibility(targetUUID, visible);
+        databaseManager.setVisibility(targetUUID, visible);
+
+        String visibleState = visible ? "видим" : "невидим";
+
+        if (self) {
+            sender.sendMessage(ChatColor.GREEN + "Теперь ты " + visibleState + " на карте");
+            return;
+        }
+
+        sender.sendMessage(ChatColor.GREEN + targetName + " теперь " + visibleState + " на карте");
+        Player targetPlayer = Bukkit.getPlayer(targetUUID);
+        if (targetPlayer != null) {
+            targetPlayer.sendMessage(ChatColor.GREEN + "Теперь ты " + visibleState + " на карте");
+        }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+        if (args.length == 1 && selfAllowed(sender)) {
+            completions.add("show");
+            completions.add("hide");
+            return completions;
+        }
+
+        if (args.length == 2 && othersAllowed(sender)) {
+            String action = args[0].toLowerCase(Locale.ROOT);
+            if (action.equals("show") || action.equals("hide")) {
+                for (Player player : sender.getServer().getOnlinePlayers()) {
+                    completions.add(player.getName());
+                }
+                completions.add("@a");
+                completions.add("@p");
+                completions.add("@r");
+                completions.add("@s");
+            }
+        }
+        return completions;
+    }
+
+    private boolean othersAllowed(CommandSender sender) {
+        return sender.isOp() || sender.hasPermission("map.others");
+    }
+
+    private boolean selfAllowed(CommandSender sender) {
+        return sender.isOp() || sender.hasPermission("map.self");
+    }
 }
